@@ -198,7 +198,7 @@ li_hb.addEventListener('click', heartbeat);
 function gestureOnClick(event) {
 	const gesture = this.textContent;
 	console.log(gesture);
-	setup_popup_content.textContent = `${gesture}\n`;
+	sensor_popup_content.textContent = `${gesture}\n`;
 	tau.openPopup('#sensor_popup');
 	globalSensorService = new SensorService('', gesture);
 	globalSensorService.start();
