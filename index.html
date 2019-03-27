@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width,user-scalable=no">
+	<title>basic</title>
+	<link rel="stylesheet" href="lib/tau/wearable/theme/default/tau.min.css">
+	<link rel="stylesheet" media="all and (-tizen-geometric-shape: circle)" href="lib/tau/wearable/theme/default/tau.circle.min.css">
+	<!-- load theme file for your application -->
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	<div class="ui-page ui-page-active" id="main">
+		<header>
+			<h2 class="ui-title">drunkare data</h2>
+		</header>
+		<div class="ui-content ui-content-padding">
+			<ul class="action-listview">
+				<!-- Each list corresponds to a gesture -->
+				<li><a id="li-drink">drink</a></li>
+				<li><a id="li-pour">pour</a></li>
+				<li><a id="li-clink">clink</a></li>
+				<li><a id="li-chopstick">chopstick</a></li>
+				<li><a id="li-spoon">spoon</a></li>
+				<li><a id="li-ladle">ladle</a></li>
+			</ul>
+		</div>
+	</div>
+	<!-- popup -->
+	<div id="1btn_popup" class="ui-popup">
+			<div class="ui-popup-header">Popup Header</div>
+			<div class="ui-popup-content popup-content-padding">
+			</div>
+			<div class="ui-popup-footer">
+				<a class="ui-btn" data-rel="back" data-inline="true">Cancel</a>
+			</div>
+		</div>
+
+</div>
+	<script src="lib/tau/wearable/js/tau.min.js"></script>
+	<script src="js/app.js"></script>
+	<script src="js/lowbatterycheck.js"></script>
+	<script src="js/circle-helper.js"></script>
+</body>
+</html>

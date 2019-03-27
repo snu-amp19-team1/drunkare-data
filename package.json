@@ -1,0 +1,23 @@
+{
+  "name": "drunkare-data",
+  "version": "0.0.1",
+  "description": "Tizen application for collecting sensor data",
+  "main": "main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snu-amp19-team1/drunkare-data.git"
+  },
+  "author": "The DrunKare Team",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/snu-amp19-team1/drunkare-data/issues"
+  },
+  "homepage": "https://github.com/snu-amp19-team1/drunkare-data#readme",
+  "dependencies": {}
+}
