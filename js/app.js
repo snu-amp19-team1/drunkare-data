@@ -47,7 +47,7 @@ const labelTable = {
 const collSize = 3624;
 
 class SensorCollection {
-	constructor(label) {
+	constructor(gesture) {
 		// TODO: ES6 getter/setter
 		this.raw = new ArrayBuffer(collSize);
 		this.now = new Date(Date.now());
@@ -65,7 +65,7 @@ class SensorCollection {
 		this.seconds[0] = this.now.getUTCSeconds();
 
 		this.label = new Int32Array(this.raw, 20, 1);
-		this.label[0] = label;
+		this.label[0] = labelTable[gesture];
 
 		this.accel_x = new Float32Array(this.raw, 24, 150);
 		this.accel_y = new Float32Array(this.raw, 624, 150);
@@ -123,7 +123,7 @@ function onAccelGetSuccess(sensorData) {
 	if (globalSensorService.accelIndex == globalSensorService.dataSize) {
 		globalSensorService.accelReady = true;
 		accelEndtime = performance.now();
-		globalSensorService.send(globalSensorService.host);
+		globalSensorService.send();
 	} else {
 		console.log(globalSensorService.interval);
 		setTimeout(accelerationSensor.start(onAccelSuccess), globalSensorService.interval);
@@ -137,7 +137,7 @@ function onAccelError(error) {
 	globalSensorService.accelIndex++;
 	if (globalSensorService.accelIndex == globalSensorService.dataSize) {
 		globalSensorService.accelReady = true;
-		globalSensorService.send(globalSensorService.host);
+		globalSensorService.send();
 	} else {
 		console.log(globalSensorService.interval);
 		setTimeout(accelerationSensor.start(onAccelSuccess), globalSensorService.interval);
@@ -160,7 +160,7 @@ function onGyroGetSuccess(sensorData) {
 	if (globalSensorService.gyroIndex == globalSensorService.dataSize) {
 		globalSensorService.gyroReady = true;
 		gyroEndtime = performance.now();
-		globalSensorService.send(globalSensorService.host);
+		globalSensorService.send();
 	} else {
 		setTimeout(gyroscopeSensor.start(onGyroSuccess), globalSensorService.interval);
 	}
@@ -172,7 +172,7 @@ function onGyroError(error) {
 	globalSensorService.gyroIndex++;
 	if (globalSensorService.gyroIndex == globalSensorService.dataSize) {
 		globalSensorService.gyroReady = true;
-		globalSensorService.send(globalSensorService.host);
+		globalSensorService.send();
 	} else {
 		setTimeout(gyroscopeSensor.start(onGyroSuccess), globalSensorService.interval);
 	}
@@ -213,29 +213,44 @@ class SensorService {
 		this.gyroStart();
 	}
 
+	// Send sensor collection via WebSocket
 	send() {
 		if (!this.accelReady || !this.gyroReady) {
 			return;
 		}
 
-		// console.log('send');
-		for (let i = 0; i < this.dataSize; i++) {
-			sensor_popup_content.textContent += this.accel_x[i];
-			sensor_popup_content.textContent += 'ax\n';
-			sensor_popup_content.textContent += this.accel_y[i];
-			sensor_popup_content.textContent += 'ay\n';
-			sensor_popup_content.textContent += this.accel_z[i];
-			sensor_popup_content.textContent += 'az\n';
-			sensor_popup_content.textContent += this.gyro_x[i];
-			sensor_popup_content.textContent += 'gx\n';
-			sensor_popup_content.textContent += this.gyro_y[i];
-			sensor_popup_content.textContent += 'gy\n';
-			sensor_popup_content.textContent += this.gyro_z[i];
-			sensor_popup_content.textContent += 'gz\n';
-		}
-
 		sensor_popup_content.textContent += `Accel elapsed time ${accelEndtime - accelStarttime} ms\n`;
 		sensor_popup_content.textContent += `Gyro elapsed time ${gyroEndtime - gyroStarttime} ms\n`;
+
+		const sc = new SensorCollection(this.gesture);
+
+		// Any efficient implementation?
+		for (let i = 0; i < this.dataSize; ++i) {
+			sc.accel_x[i] = this.accel_x[i];
+			sc.accel_y[i] = this.accel_y[i];
+			sc.accel_z[i] = this.accel_z[i];
+			sc.gyro_x[i] = this.gyro_x[i];
+			sc.gyro_y[i] = this.gyro_y[i];
+			sc.gyro_z[i] = this.gyro_z[i];
+		}
+
+		const ws = new WebSocket(this.host);
+		ws.binaryType = 'arraybuffer'
+
+		ws.onopen = (function open() {
+			ws.send(sc.raw);
+		});
+
+		ws.onmessage = (function incoming(ev) {
+			const recv = new Uint8Array(ev.data);
+			const magicNumber = new Int32Array(recv.buffer)[0];
+			if (magicNumber === 200) {
+				sensor_popup_content.textContent += 'Data successfully written';
+			} else {
+				sensor_popup_content.textContent += 'Something has gone wrong...';
+			}
+			ws.close();
+		});
 	}
 }
 
@@ -266,7 +281,7 @@ function gestureOnClick(event) {
 	console.log(gesture);
 	sensor_popup_content.textContent = `${gesture}\n`;
 	tau.openPopup('#sensor_popup');
-	globalSensorService = new SensorService('', gesture);
+	globalSensorService = new SensorService('Replace with real hostname', gesture);
 	globalSensorService.start();
 }
 
