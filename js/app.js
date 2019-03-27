@@ -10,6 +10,72 @@ var accelStarttime;
 var accelEndtime;
 var gyroStarttime;
 var gyroEndtime;
+
+/* To be added */
+const labelTable = {
+	drink: 0,
+	pour: 1,
+	clink: 2,
+	chopstick: 3,
+	spoon: 4,
+	ladle: 5,
+}
+
+/*
+ * Collection of sensor data
+ *
+ * description
+ * -----------
+ * 1. Date (20 bytes)
+ *   month (i32) | date (i32) | hours (i32) | minutes (i32) | seconds (i32)
+ *
+ * 2. Label (4 bytes)
+ *   0 - drink
+ *   1 - pour
+ *   2 - clink
+ *   3 - chopstick
+ *   4 - spoon
+ *   5 - ladle
+ *   (To be added)
+ *
+ * 3. Sensor data (25Hz, 150 samples, 6 * 600 bytes)
+ *   accel_x (f32) | accel_y (f32) | accel_z (f32) |
+ *   gyro_x (f32) | gyro_y (f32) | gyro_z (f32)
+ * -----------
+ * (Total) 20 + 4 + 3600 = 3624 bytes
+ */
+const collSize = 3624;
+
+class SensorCollection {
+	constructor(label) {
+		// TODO: ES6 getter/setter
+		this.raw = new ArrayBuffer(collSize);
+		this.now = new Date(Date.now());
+
+		this.month = new Int32Array(this.raw, 0, 1);
+		this.date = new Int32Array(this.raw, 4, 1);
+		this.hours= new Int32Array(this.raw, 8, 1);
+		this.minutes = new Int32Array(this.raw, 12, 1);
+		this.seconds = new Int32Array(this.raw, 16, 1);
+
+		this.month[0] = this.now.getUTCMonth() + 1; // because it starts with 0
+		this.date[0] = this.now.getUTCDate();
+		this.hours[0] = this.now.getUTCHours();
+		this.minutes[0] = this.now.getUTCMinutes();
+		this.seconds[0] = this.now.getUTCSeconds();
+
+		this.label = new Int32Array(this.raw, 20, 1);
+		this.label[0] = label;
+
+		this.accel_x = new Float32Array(this.raw, 24, 150);
+		this.accel_y = new Float32Array(this.raw, 624, 150);
+		this.accel_z = new Float32Array(this.raw, 1224, 150);
+		this.gyro_x = new Float32Array(this.raw, 1824, 150);
+		this.gyro_y = new Float32Array(this.raw, 2424, 150);
+		this.gyro_z = new Float32Array(this.raw, 3024, 150);
+	}
+}
+
 /**
  * Store sensor data to sensorService
  * @param sensorType Accelerometer or Gyroscope
