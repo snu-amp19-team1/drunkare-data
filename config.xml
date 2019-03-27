@@ -5,6 +5,7 @@
     <feature name="http://tizen.org/feature/screen.size.normal"/>
     <icon src="icon.png"/>
     <name>DrunkareData</name>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
     <tizen:profile name="wearable"/>
     <tizen:setting hwkey-event="enable"/>
 </widget>

@@ -22,18 +22,29 @@
 				<li><a id="li-chopstick">chopstick</a></li>
 				<li><a id="li-spoon">spoon</a></li>
 				<li><a id="li-ladle">ladle</a></li>
+				<li><a id="li-hb">Heartbeat</a></li>
 			</ul>
 		</div>
 	</div>
-	<!-- popup -->
-	<div id="1btn_popup" class="ui-popup">
-			<div class="ui-popup-header">Popup Header</div>
-			<div class="ui-popup-content popup-content-padding">
-			</div>
-			<div class="ui-popup-footer">
-				<a class="ui-btn" data-rel="back" data-inline="true">Cancel</a>
-			</div>
+	<!-- Sensor popup -->
+	<div id="sensor_popup" class="ui-popup">
+		<div class="ui-popup-header">Getting sensor data</div>
+		<div class="sensor-ui-popup-content popup-content-padding">
 		</div>
+		<div class="ui-popup-footer">
+			<a class="ui-btn" data-rel="back" data-inline="true">Cancel</a>
+		</div>
+	</div>
+
+	<!-- Hearbeat websocket popup -->
+	<div id="hb_popup" class="ui-popup">
+		<div class="ui-popup-header">Hearbeat</div>
+		<div class="hb-ui-popup-content popup-content-padding">
+		</div>
+		<div class="ui-popup-footer">
+			<a class="ui-btn" data-rel="back" data-inline="true">Cancel</a>
+		</div>
+	</div>
 
 </div>
 	<script src="lib/tau/wearable/js/tau.min.js"></script>

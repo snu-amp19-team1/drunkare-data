@@ -1,8 +1,6 @@
 /*
  * Copyright (c) The DrunKare Team. All rights reserved.
  */
-// const WebSocket = require('ws');
-
 const accelerationSensor = tizen.sensorservice.getDefaultSensor("ACCELERATION");
 const gyroscopeSensor = tizen.sensorservice.getDefaultSensor("GYROSCOPE");
 
@@ -156,27 +154,29 @@ class SensorService {
 
 		// console.log('send');
 		for (let i = 0; i < this.dataSize; i++) {
-			popup_content.textContent += this.accel_x[i];
-			popup_content.textContent += 'ax\n';
-			popup_content.textContent += this.accel_y[i];
-			popup_content.textContent += 'ay\n';
-			popup_content.textContent += this.accel_z[i];
-			popup_content.textContent += 'az\n';
-			popup_content.textContent += this.gyro_x[i];
-			popup_content.textContent += 'gx\n';
-			popup_content.textContent += this.gyro_y[i];
-			popup_content.textContent += 'gy\n';
-			popup_content.textContent += this.gyro_z[i];
-			popup_content.textContent += 'gz\n';
+			sensor_popup_content.textContent += this.accel_x[i];
+			sensor_popup_content.textContent += 'ax\n';
+			sensor_popup_content.textContent += this.accel_y[i];
+			sensor_popup_content.textContent += 'ay\n';
+			sensor_popup_content.textContent += this.accel_z[i];
+			sensor_popup_content.textContent += 'az\n';
+			sensor_popup_content.textContent += this.gyro_x[i];
+			sensor_popup_content.textContent += 'gx\n';
+			sensor_popup_content.textContent += this.gyro_y[i];
+			sensor_popup_content.textContent += 'gy\n';
+			sensor_popup_content.textContent += this.gyro_z[i];
+			sensor_popup_content.textContent += 'gz\n';
 		}
 
-		popup_content.textContent += `Accel elapsed time ${accelEndtime - accelStarttime} ms\n`;
-		popup_content.textContent += `Gyro elapsed time ${gyroEndtime - gyroStarttime} ms\n`;
+		sensor_popup_content.textContent += `Accel elapsed time ${accelEndtime - accelStarttime} ms\n`;
+		sensor_popup_content.textContent += `Gyro elapsed time ${gyroEndtime - gyroStarttime} ms\n`;
 	}
 }
 
-const popup_content = document.querySelector('.ui-popup-content');
+const sensor_popup_content = document.querySelector('.sensor-ui-popup-content');
+const hb_popup_content = document.querySelector('.hb-ui-popup-content');
 
+// Gestures
 const li_drink = document.getElementById('li-drink');
 const li_pour= document.getElementById('li-pour');
 const li_clink = document.getElementById('li-clink');
@@ -184,20 +184,57 @@ const li_chopstick = document.getElementById('li-chopstick');
 const li_spoon =  document.getElementById('li-spoon');
 const li_ladle = document.getElementById('li-ladle');
 
-li_drink.addEventListener('click', onClick);
-li_pour.addEventListener('click', onClick);
-li_clink.addEventListener('click', onClick);
-li_chopstick.addEventListener('click', onClick);
-li_spoon.addEventListener('click', onClick);
-li_ladle.addEventListener('click', onClick);
+// Heartbeat
+const li_hb = document.getElementById('li-hb');
 
-function onClick(event) {
+li_drink.addEventListener('click', gestureOnClick);
+li_pour.addEventListener('click', gestureOnClick);
+li_clink.addEventListener('click', gestureOnClick);
+li_chopstick.addEventListener('click', gestureOnClick);
+li_spoon.addEventListener('click', gestureOnClick);
+li_ladle.addEventListener('click', gestureOnClick);
+li_hb.addEventListener('click', heartbeat);
+
+function gestureOnClick(event) {
 	const gesture = this.textContent;
 	console.log(gesture);
-	popup_content.textContent = `${gesture}\n`;
-	tau.openPopup('1btn_popup');
+	setup_popup_content.textContent = `${gesture}\n`;
+	tau.openPopup('#sensor_popup');
 	globalSensorService = new SensorService('', gesture);
 	globalSensorService.start();
+}
+
+function heartbeat(event) {
+	tau.openPopup('#hb_popup');
+	hb_popup_content.textContent = 'Connect to the WebSocket server\n';
+
+	// Don't enter a real hostname when you push to public repository
+	var ws = new WebSocket('Replace with real hostname');
+
+	// In this API version, we must specify binaryType
+	ws.binaryType = 'arraybuffer';
+
+	ws.onopen = (function open() {
+		const buffer = new ArrayBuffer(4);
+		const send = new Uint32Array(buffer, 0);
+		send[0] = 42 // magic number
+		ws.send(buffer);
+		hb_popup_content.textContent += 'Send magic number\n';
+	});
+
+	ws.onmessage = (function incoming(ev) {
+		const recv = new Uint8Array(ev.data);
+		const magicNumber = new Int32Array(recv.buffer)[0];
+		if (magicNumber === 42) {
+			hb_popup_content.textContent += 'OK\n';
+		} else {
+			hb_popup_content.textContent += `Expected ${42}, got ${magicNumber}\n`;
+		}
+
+		if (ws.readyState === WebSocket.OPEN) {
+			ws.close();
+		}
+	})
 }
 
 (function () {
