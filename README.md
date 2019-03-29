@@ -10,3 +10,6 @@ Tizen application for data collection
 
 ### TODO
 * WebSocket communication with [drunkare-node](https://github.com/snu-amp19-team1/drunkare-node)
+
+### Visualization
+* SensorDataVisualization.ipynb (matplotlib required)
