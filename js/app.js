@@ -19,6 +19,9 @@ const labelTable = {
 	chopstick: 3,
 	spoon: 4,
 	ladle: 5,
+	drink_beer: 6,
+	pour_beer: 7,
+	clink_beer: 8
 }
 
 /*
@@ -36,6 +39,9 @@ const labelTable = {
  *   3 - chopstick
  *   4 - spoon
  *   5 - ladle
+ *   6 - drink_beer
+ *   7 - pour_beer
+ *   8 - clink_beer
  *   (To be added)
  *
  * 3. Sensor data (25Hz, 150 samples, 6 * 600 bytes)
@@ -264,6 +270,9 @@ const li_clink = document.getElementById('li-clink');
 const li_chopstick = document.getElementById('li-chopstick');
 const li_spoon =  document.getElementById('li-spoon');
 const li_ladle = document.getElementById('li-ladle');
+const li_drink_beer = document.getElementById('li-drink-beer');
+const li_pour_beer = document.getElementById('li-pour-beer');
+const li_clink_beer = document.getElementById('li-clink-beer');
 
 // Heartbeat
 const li_hb = document.getElementById('li-hb');
@@ -274,6 +283,9 @@ li_clink.addEventListener('click', gestureOnClick);
 li_chopstick.addEventListener('click', gestureOnClick);
 li_spoon.addEventListener('click', gestureOnClick);
 li_ladle.addEventListener('click', gestureOnClick);
+li_drink_beer.addEventListener('click', gestureOnClick);
+li_pour_beer.addEventListener('click', gestureOnClick);
+li_clink_beer.addEventListener('click', gestureOnClick);
 li_hb.addEventListener('click', heartbeat);
 
 function gestureOnClick(event) {
