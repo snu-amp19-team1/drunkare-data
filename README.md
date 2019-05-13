@@ -13,3 +13,8 @@ Tizen application for data collection
 
 ### Visualization
 * SensorDataVisualization.ipynb (matplotlib required)
+
+
+###data collection method of complex data (10minutes)
+We should collect data on camera cuz we need tagging. we can't do so
+in realisitic constraints. 
