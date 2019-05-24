@@ -16,7 +16,7 @@ def new_data(stub):
     Send activity reference request via GRPC
     """
 
-    # Fake data for now
+    # TODO: Replace with real data
     rawdata = prediction_service_pb2.RawData(
         username='alice',
         id=1000,
@@ -65,10 +65,12 @@ async def index(request):
   <body>
     <input class="inference" type="button" value="Get recent activities">
     <input class="flushdb" type="button" value="Flush db">
+    <input class="keys" type="button" value="Get all keys">
     <div class="logger"></div>
     <script>
     const inference = document.querySelector('.inference');
     const flushDb = document.querySelector('.flushdb');
+    const keys = document.querySelector('.keys');
     const logger = document.querySelector('.logger');
 
     inference.addEventListener('click', function() {
@@ -90,6 +92,16 @@ async def index(request):
            logger.appendChild(log);
         })
     });
+
+    keys.addEventListener('click', function() {
+      fetch('/keys')
+        .then(resp => resp.json())
+        .then(data => {
+           const log = document.createElement('p');
+           log.textContent = `Extracting all keys: ${data.keys}`;
+           logger.appendChild(log);
+        })
+    })
     </script>
   </body>
 </html>''', content_type='text/html')
@@ -104,6 +116,7 @@ async def api(request):
 
     return web.Response(text='{}'.format(activities), content_type='application/json')
 
+
 async def flush(request):
     r = redis.Redis(
         host='redis',
@@ -112,6 +125,22 @@ async def flush(request):
     r.flushdb()
 
     return web.Response(text='{"text":"Flush Redis"}', content_type='application/json')
+
+
+async def keys(request):
+    r = redis.Redis(
+        host='redis',
+        port=6379)
+
+    keys = []
+    for key in r.keys():
+        keys.append(key.decode('utf-8'))
+
+    message = {}
+    message['keys'] = keys
+
+    return web.Response(text=json.dumps(message), content_type='application/json')
+
 
 def run():
 
@@ -123,7 +152,8 @@ def run():
     app.add_routes([web.post('/{username}', username),
                     web.get('/', index),
                     web.get('/api', api),
-                    web.get('/flush', flush)])
+                    web.get('/flush', flush),
+                    web.get('/keys', keys)])
     web.run_app(app, port=8888)
 
 

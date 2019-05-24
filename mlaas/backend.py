@@ -24,7 +24,24 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
             host='redis',
             port=6379)
 
+        ###############################################################
+        # TODO: Initialize the feature extractor                      #
+        ###############################################################
+        self.feature_extractor = {}
+
+        ###############################################################
+        # TODO: Initialize the activity predictor                     #
+        ###############################################################
+        self.activity_precictor = {}
+
+        ###############################################################
+        # TODO: Initialize the context predictor                      #
+        ###############################################################
+        self.context_precictor = {}
+
     def NewData(self, request, context):
+        # Look for the most recent activity
+        # WARNING: continuity among restart are not well investigated
         user_idx = self.redis.get(request.username)
         if user_idx == None:
             self.redis.set(request.username, struct.pack('<L', 0))
@@ -38,17 +55,15 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
         # For debugging
         user_idx = self.redis.get(request.username)
         user_idx = struct.unpack('<L', user_idx)[0]
-        print('username: {}, idx: {}'.format(request.username, user_idx))
+        print('username: {}, latest idx: {}'.format(request.username, user_idx))
 
+        # Generate key for given
         key = generate_key(request.username,
                            request.id,
                            request.record.sensorType,
                            'raw')
 
-        nrSamples = request.nrSamples
-
-        print('key: {}'.format(key))
-        raw = '{{"x":{},"y":{},"z":{}}}'.format(request.record.x, request.record.y, request.record.z)
+        nrSamples = request.nrSamples # Tentative
 
         self.redis.set(key, json.dumps(raw))
         value = self.redis.get(key)
@@ -62,9 +77,9 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
         for k, v in pyValue.items():
             print('{}: {}'.format(k, v))
 
-        ###############################################################
-        # TODO: Compute and store features                            #
-        ###############################################################
+        ################################################################
+        # TODO: Compute and store features with self.feature_extractor #
+        ################################################################
 
         # Fake response for now
         return prediction_service_pb2.DataAck(
@@ -83,6 +98,12 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
         a_value = self.redis.get(a_key)
         g_value = self.redis.get(g_key)
 
+        ################################################################
+        # TODO: Retrieve features from `id` to `id+nrRequests` perform #
+        # activity classification and format results. Store results to #
+        # Redis                                                        #
+        ################################################################
+
         # Just check
         print('{} {}'.format(a_value, g_value))
 
@@ -90,6 +111,10 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
             status=prediction_service_pb2.ActivityResponse.OK,
             nrRequests=nrRequests,
             activities=[1, 1, 1, 1])
+
+    ################################################################
+    # TODO: Context classifier                                     #
+    ################################################################
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
