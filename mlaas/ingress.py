@@ -64,9 +64,11 @@ async def index(request):
   </head>
   <body>
     <input class="inference" type="button" value="Get recent activities">
+    <input class="flushdb" type="button" value="Flush db">
     <div class="logger"></div>
     <script>
     const inference = document.querySelector('.inference');
+    const flushDb = document.querySelector('.flushdb');
     const logger = document.querySelector('.logger');
 
     inference.addEventListener('click', function() {
@@ -75,6 +77,16 @@ async def index(request):
         .then(data => {
            const log = document.createElement('p');
            log.textContent = JSON.stringify(data);
+           logger.appendChild(log);
+        })
+    });
+
+    flushDb.addEventListener('click', function() {
+      fetch('/flush')
+        .then(resp => resp.json())
+        .then(data => {
+           const log = document.createElement('p');
+           log.textContent = data.text;
            logger.appendChild(log);
         })
     });
@@ -90,11 +102,16 @@ async def api(request):
         stub = prediction_service_pb2_grpc.PredictionStub(channel)
         activities = infer_activity(stub)
 
-    resp = {}
-    resp['activities'] = activities
+    return web.Response(text='{}'.format(activities), content_type='application/json')
 
-    return web.Response(text=json.dumps(resp), content_type='application/json')
+async def flush(request):
+    r = redis.Redis(
+        host='redis',
+        port=6379)
 
+    r.flushdb()
+
+    return web.Response(text='{"text":"Flush Redis"}', content_type='application/json')
 
 def run():
 
@@ -105,8 +122,9 @@ def run():
     app = web.Application()
     app.add_routes([web.post('/{username}', username),
                     web.get('/', index),
-                    web.get('/api', api)])
-    # web.run_app(app, port=8888)
+                    web.get('/api', api),
+                    web.get('/flush', flush)])
+    web.run_app(app, port=8888)
 
 
 if __name__ == '__main__':

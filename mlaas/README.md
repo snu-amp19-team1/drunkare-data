@@ -13,3 +13,6 @@ $ docker-compose up
 $ docker-compose up --force-recreate --build
 ```
 
+### Overview
+
+![Design Overview](./overview.png)

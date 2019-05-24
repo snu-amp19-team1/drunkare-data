@@ -75,18 +75,18 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
     def InferActivity(self, request, context):
         username = request.username
         from_id = request.id
-        nrRequests = request.nrRequest
+        nrRequests = request.nrRequests
  
         # dummy
         a_key = generate_key(username, from_id, 0, 'raw')
-        g_key = generage_key(username, from_id, 1, 'raw')
+        g_key = generate_key(username, from_id, 1, 'raw')
         a_value = self.redis.get(a_key)
         g_value = self.redis.get(g_key)
 
         # Just check
-        print('{} {}', a_value, g_value)
+        print('{} {}'.format(a_value, g_value))
 
-        return prediction_service_pb2(
+        return prediction_service_pb2.ActivityResponse(
             status=prediction_service_pb2.ActivityResponse.OK,
             nrRequests=nrRequests,
             activities=[1, 1, 1, 1])
