@@ -14,9 +14,14 @@ class PredictionStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.GetActivityInference = channel.unary_unary(
-        '/prediction.Prediction/GetActivityInference',
+    self.NewData = channel.unary_unary(
+        '/prediction.Prediction/NewData',
         request_serializer=prediction__service__pb2.RawData.SerializeToString,
+        response_deserializer=prediction__service__pb2.DataAck.FromString,
+        )
+    self.InferActivity = channel.unary_unary(
+        '/prediction.Prediction/InferActivity',
+        request_serializer=prediction__service__pb2.ActivityRequest.SerializeToString,
         response_deserializer=prediction__service__pb2.ActivityResponse.FromString,
         )
 
@@ -25,8 +30,15 @@ class PredictionServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def GetActivityInference(self, request, context):
+  def NewData(self, request, context):
     """Send Data 
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def InferActivity(self, request, context):
+    """API for activity inference 
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -35,9 +47,14 @@ class PredictionServicer(object):
 
 def add_PredictionServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'GetActivityInference': grpc.unary_unary_rpc_method_handler(
-          servicer.GetActivityInference,
+      'NewData': grpc.unary_unary_rpc_method_handler(
+          servicer.NewData,
           request_deserializer=prediction__service__pb2.RawData.FromString,
+          response_serializer=prediction__service__pb2.DataAck.SerializeToString,
+      ),
+      'InferActivity': grpc.unary_unary_rpc_method_handler(
+          servicer.InferActivity,
+          request_deserializer=prediction__service__pb2.ActivityRequest.FromString,
           response_serializer=prediction__service__pb2.ActivityResponse.SerializeToString,
       ),
   }

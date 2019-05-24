@@ -1,6 +1,7 @@
 from concurrent import futures
 import time
 import logging
+import struct
 
 import grpc
 import redis
@@ -9,10 +10,11 @@ import json
 import prediction_service_pb2
 import prediction_service_pb2_grpc
 
-def generateKey(username: str,
-                id: int,
-                valueType: str):
-    return '{}-{}-{}'.format(username, id, valueType)
+def generate_key(username: str,
+                 id: int,
+                 sensorType: int,
+                 valueType: str):
+    return '{}-{:04d}-{:02d}-{}'.format(username, id, sensorType, valueType)
 
 
 class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
@@ -22,21 +24,31 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
             host='redis',
             port=6379)
 
-    def GetActivityInference(self, request, context):
-        key = generateKey(request.username,
-                          request.id,
-                          'raw')
+    def NewData(self, request, context):
+        user_idx = self.redis.get(request.username)
+        if user_idx == None:
+            self.redis.set(request.username, struct.pack('<L', 0))
+        else:
+            user_idx = struct.unpack('<L', user_idx)[0]
 
-        print('key: {}', key)
+            if request.id > user_idx:
+                # New request
+                self.redis.set(request.username, struct.pack('<L', request.id))
 
-        # HACK:
-        #   Formatting json string
-        raw = '{{"accel":{{"x":{},"y":{},"z":{}}},"gyro":{{"x":{},"y":{},"z":{}}}}}'.format(request.accel.x,
-                                                                                            request.accel.y,
-                                                                                            request.accel.z,
-                                                                                            request.gyro.x,
-                                                                                            request.gyro.y,
-                                                                                            request.gyro.z)
+        # For debugging
+        user_idx = self.redis.get(request.username)
+        user_idx = struct.unpack('<L', user_idx)[0]
+        print('username: {}, idx: {}'.format(request.username, user_idx))
+
+        key = generate_key(request.username,
+                           request.id,
+                           request.record.sensorType,
+                           'raw')
+
+        nrSamples = request.nrSamples
+
+        print('key: {}'.format(key))
+        raw = '{{"x":{},"y":{},"z":{}}}'.format(request.record.x, request.record.y, request.record.z)
 
         self.redis.set(key, json.dumps(raw))
         value = self.redis.get(key)
@@ -48,14 +60,36 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
         pyValue = json.loads(value.decode('unicode-escape').strip('"'))
 
         for k, v in pyValue.items():
-            # pyValue['x']
-            print('{}'.format(k))
-            for kk, vv in v.items():
-                print('{}: {}'.format(kk, vv))
+            print('{}: {}'.format(k, v))
 
-        return prediction_service_pb2.ActivityResponse(
-            status=prediction_service_pb2.ActivityResponse.ERR
+        ###############################################################
+        # TODO: Compute and store features                            #
+        ###############################################################
+
+        # Fake response for now
+        return prediction_service_pb2.DataAck(
+            status=prediction_service_pb2.DataAck.OK,
+            nrSamples=nrSamples
         )
+
+    def InferActivity(self, request, context):
+        username = request.username
+        from_id = request.id
+        nrRequests = request.nrRequest
+ 
+        # dummy
+        a_key = generate_key(username, from_id, 0, 'raw')
+        g_key = generage_key(username, from_id, 1, 'raw')
+        a_value = self.redis.get(a_key)
+        g_value = self.redis.get(g_key)
+
+        # Just check
+        print('{} {}', a_value, g_value)
+
+        return prediction_service_pb2(
+            status=prediction_service_pb2.ActivityResponse.OK,
+            nrRequests=nrRequests,
+            activities=[1, 1, 1, 1])
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

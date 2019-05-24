@@ -3,7 +3,7 @@
 set -m
 
 # protoc
-# python -m grpcio_tools.protoc -I./protos --python_out=. --grpc_python_out=. protos/prediction_service.proto
+python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. protos/prediction_service.proto
 
 # Run backend service in the background
 python backend.py &

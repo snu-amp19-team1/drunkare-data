@@ -11,28 +11,36 @@ import prediction_service_pb2_grpc
 import redis
 from aiohttp import web
 
-def get_activity_inference(stub):
+def new_data(stub):
     """
     Send activity reference request via GRPC
     """
+
+    # Fake data for now
     rawdata = prediction_service_pb2.RawData(
         username='alice',
         id=1000,
         nrSamples=4,
-        accel = prediction_service_pb2.RawData.Record(
-            sensorType = prediction_service_pb2.RawData.Record.ACCEL,
-            x = [0,0,0,0],
-            y = [0,0,0,0],
-            z = [0,0,0,0]),
-        gyro = prediction_service_pb2.RawData.Record(
-            sensorType = prediction_service_pb2.RawData.Record.GYRO,
+        record=prediction_service_pb2.RawData.Record(
+            sensorType=prediction_service_pb2.RawData.Record.ACCEL,
             x = [0,0,0,0],
             y = [0,0,0,0],
             z = [0,0,0,0]))
-    responses = stub.GetActivityInference(rawdata)
-    print('status: {}'.format(responses.status))
+    responses = stub.NewData(rawdata)
+    print('new_data: {}'.format(responses))
 
-async def handle(request):
+
+def infer_activity(stub):
+    activity_request = prediction_service_pb2.ActivityRequest(
+        username='alice',
+        id=1000,
+        nrRequests=1)
+    responses = stub.InferActivity(activity_request)
+    print('infer_activity: {}'.format(responses))
+    return responses.activities
+
+
+async def username(request):
     """
     (1) Parse raw data (2) Increment per-username id and (3) Send grpc request
     """
@@ -42,9 +50,10 @@ async def handle(request):
     # text = "Hello, " + name
     with grpc.insecure_channel('localhost:5051') as channel:
         stub = prediction_service_pb2_grpc.PredictionStub(channel)
-        get_activity_inference(stub)
+        new_data(stub)
 
     return web.Response(text='Hello')
+
 
 async def index(request):
     return web.Response(text=r'''
@@ -73,20 +82,32 @@ async def index(request):
   </body>
 </html>''', content_type='text/html')
 
+
 async def api(request):
-    return web.Response(text=r'''{"x":0,"y":1}''', content_type='application/json')
+    activities = []
+
+    with grpc.insecure_channel('localhost:5051') as channel:
+        stub = prediction_service_pb2_grpc.PredictionStub(channel)
+        activities = infer_activity(stub)
+
+    resp = {}
+    resp['activities'] = activities
+
+    return web.Response(text=json.dumps(resp), content_type='application/json')
+
 
 def run():
 
     with grpc.insecure_channel('localhost:5051') as channel:
         stub = prediction_service_pb2_grpc.PredictionStub(channel)
-        get_activity_inference(stub)
+        new_data(stub)
 
     app = web.Application()
-    app.add_routes([web.post('/{username}', handle),
+    app.add_routes([web.post('/{username}', username),
                     web.get('/', index),
                     web.get('/api', api)])
-    web.run_app(app, port=8888)
+    # web.run_app(app, port=8888)
+
 
 if __name__ == '__main__':
     logging.basicConfig()
