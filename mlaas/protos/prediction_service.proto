@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package  prediction;
+
+service Prediction {
+  /* Send Data */
+  rpc GetActivityInference(RawData) returns (ActivityResponse) {}
+}
+
+/* Raw data
+ *  Assuming we have only two sensor types
+ */
+message RawData {
+  string username = 1;
+  int32 id = 2;
+  int32 nrSamples = 3;
+  Record accel = 4;
+  Record gyro = 5;
+
+  message Record {
+    SensorType sensorType = 1;
+    repeated float x = 2;
+    repeated float y = 3;
+    repeated float z = 4;
+
+    enum SensorType {
+      ACCEL = 0;
+      GYRO = 1;
+    }
+  }
+}
+
+/* Activity response */
+message ActivityResponse {
+  Status status = 1;
+  int32 id = 2;
+  int32 nrSamples = 3;
+  repeated Activity activities = 4;
+
+  enum Status {
+    OK = 0; /* All sensor data are available */
+    ERR = 1; /* Some sensor data is unvailable */
+  }
+
+  enum Activity {
+    FACE = 0;
+    POUR = 1;
+    HANDS_UP = 2;
+    PHONE = 3;
+    PEN = 4;
+    CLINK = 5;
+    DRINK_NO_HANDLE = 6;
+    TISSUE = 7;
+    DRINK_HANDLE = 8;
+    SPOON = 9;
+    CHOPSTICKS = 10;
+    TAKING_PHOTO = 11;
+    FORK = 12;
+    STIR = 13;
+    KEYBOARD = 14;
+    MOUSE = 15;
+    IDLE = 16;
+  }
+}
