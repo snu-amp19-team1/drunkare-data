@@ -11,23 +11,38 @@ import prediction_service_pb2_grpc
 import redis
 from aiohttp import web
 
-def new_data(stub):
+def new_data(stub, data):
     """
     Send activity reference request via GRPC
     """
 
-    # TODO: Replace with real data
+    sensorType = 0
+    x, y, z = [], [], []
+    if 'accel' in data:
+        sensorType = 0
+        x = data['accel']['x']
+        y = data['accel']['y']
+        z = data['accel']['z']
+    elif 'gyro' in data:
+        sensorType = 1
+        x = data['gyro']['x']
+        y = data['gyro']['y']
+        z = data['gyro']['z']
+
     rawdata = prediction_service_pb2.RawData(
         username='alice',
-        id=1000,
-        nrSamples=4,
+        id=data['id'],
+        nrSamples=len(x),
         record=prediction_service_pb2.RawData.Record(
-            sensorType=prediction_service_pb2.RawData.Record.ACCEL,
-            x = [0,0,0,0],
-            y = [0,0,0,0],
-            z = [0,0,0,0]))
+            sensorType=sensorType,
+            x=x,
+            y=y,
+            z=z
+        )
+    )
+
     responses = stub.NewData(rawdata)
-    print('new_data: {}'.format(responses))
+    # print('new_data: {}'.format(responses))
 
 
 def infer_activity(stub):
@@ -46,11 +61,10 @@ async def username(request):
     """
     username = request.match_info.get('username', "None")
     data = await request.json()
-    print('{}'.format(json.dumps(data)))
-    # text = "Hello, " + name
+    # print('{}'.format(json.dumps(data)['username']))
     with grpc.insecure_channel('localhost:5051') as channel:
         stub = prediction_service_pb2_grpc.PredictionStub(channel)
-        new_data(stub)
+        new_data(stub, data)
 
     return web.Response(text='Hello')
 
@@ -98,7 +112,7 @@ async def index(request):
         .then(resp => resp.json())
         .then(data => {
            const log = document.createElement('p');
-           log.textContent = `Extracting all keys: ${data.keys}`;
+           log.textContent = `Extracting all keys: ${data.keys} ${data.keys.length}`;
            logger.appendChild(log);
         })
     })
@@ -143,11 +157,6 @@ async def keys(request):
 
 
 def run():
-
-    with grpc.insecure_channel('localhost:5051') as channel:
-        stub = prediction_service_pb2_grpc.PredictionStub(channel)
-        new_data(stub)
-
     app = web.Application()
     app.add_routes([web.post('/{username}', username),
                     web.get('/', index),
