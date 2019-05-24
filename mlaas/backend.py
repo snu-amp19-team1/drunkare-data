@@ -1,3 +1,4 @@
+
 from concurrent import futures
 import time
 import logging
@@ -56,6 +57,8 @@ class PredictionServicer(prediction_service_pb2_grpc.PredictionServicer):
         user_idx = self.redis.get(request.username)
         user_idx = struct.unpack('<L', user_idx)[0]
         print('username: {}, latest idx: {}'.format(request.username, user_idx))
+
+        raw = '{{"x":{},"y":{},"z":{}}}'.format(request.record.x, request.record.y, request.record.z)
 
         # Generate key for given
         key = generate_key(request.username,
