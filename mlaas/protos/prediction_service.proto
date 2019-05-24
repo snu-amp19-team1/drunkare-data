@@ -4,18 +4,22 @@ package  prediction;
 
 service Prediction {
   /* Send Data */
-  rpc GetActivityInference(RawData) returns (ActivityResponse) {}
+  rpc NewData(RawData) returns (DataAck) {}
+
+  /* API for activity inference */
+  rpc InferActivity(ActivityRequest) returns (ActivityResponse) {}
 }
 
-/* Raw data
- *  Assuming we have only two sensor types
- */
+/***************************
+ * NewData: store new data *
+ ***************************/
+
+/* Raw data */
 message RawData {
   string username = 1;
   int32 id = 2;
   int32 nrSamples = 3;
-  Record accel = 4;
-  Record gyro = 5;
+  Record record = 5;
 
   message Record {
     SensorType sensorType = 1;
@@ -30,11 +34,33 @@ message RawData {
   }
 }
 
+/* Response to NewData */
+message DataAck {
+  Status status = 1;
+  int32 nrSamples = 2;
+
+  enum Status {
+    OK = 0;
+    ERR = 1;
+  }
+}
+
+
+/*************************************************************************************
+ * InferActivity: Get activity inferences of `nrRequests` samples starting from `id` *
+ *************************************************************************************/
+
+/* Activity request */
+message ActivityRequest {
+  string username = 1;
+  int32 id = 2;
+  int32 nrRequests = 3; // request activity inference for recent `nrRequests` samples
+}
+
 /* Activity response */
 message ActivityResponse {
   Status status = 1;
-  int32 id = 2;
-  int32 nrSamples = 3;
+  int32 nrRequests = 3;
   repeated Activity activities = 4;
 
   enum Status {
